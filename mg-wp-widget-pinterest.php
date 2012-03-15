@@ -1,5 +1,15 @@
 <?php
 
+/*
+Plugin Name: mg-wp-widget-pinterest
+Plugin URI: http://mgiulio.altervista.org
+Description: Shows your Pinterest pins
+Version: 0.1
+Author: mgiulio (Giulio Mainardi)
+Author URI: http://mgiulio.altervista.org
+License: GPL2
+*/
+
 class mg_Widget_Pinterest extends WP_Widget {
 
 	function __construct() {
