@@ -67,7 +67,17 @@ class mg_Widget_Pinterest extends WP_Widget {
 
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
-		echo "Here will go the pins";
+		
+		echo '<ul>';
+		foreach ($rss->get_items(0, 5) as $item) {
+			$title = esc_attr(strip_tags($item->get_title()));
+			$link = $item->get_link();
+			$desc = $item->get_description();
+			
+			echo "<li><a href='$link'>$title</a>$desc</li>";
+		}
+		echo '</ul>';
+		
 		echo $after_widget;
 
 		$rss->__destruct();
