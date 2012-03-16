@@ -96,15 +96,28 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		
-		echo '<ul>';
+		$pinboardWidth = 200;
+		$colWidth = 50;
+		$numCols = floor($pinboardWidth / $colWidth);
+		$cols = array();
+		$c = 0;
 		foreach ($rss->get_items(0, $instance['items']) as $item) {
 			$title = esc_attr(strip_tags($item->get_title()));
 			$link = $item->get_link();
 			$desc = $item->get_description();
+			$imgSrc = array();
+			preg_match('/src="(.*)"/', $desc, $imgSrc);
 			
-			echo "<li><a href='$link'>$title</a>$desc</li>";
+			$cols[$c][] = "<a href='$link'><img src='{$imgSrc[1]}' title='$title' alt='$title'></a>";
+			$c = ($c+1) % $numCols;
 		}
-		echo '</ul>';
+		echo "<div class='pinboard' style='width: {$pinboardWidth}px; margin: 0 auto; height: 80px; background-color: #f0f0f0;'>";
+		foreach ($cols as $c) {
+			echo "<div class='col' style='width: {$colWidth}px; float: left;'>";
+			echo implode('', $c);
+			echo "</div>";
+		}
+		echo "</div>";
 		
 		echo $after_widget;
 
