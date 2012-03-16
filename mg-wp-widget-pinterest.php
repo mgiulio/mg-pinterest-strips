@@ -21,37 +21,65 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function form($instance) {
-		if (empty($instance))
-			$instance = array(
-				'username' => '', 
-				'items' => 5, 
-				'cache life' => 3600
-			);
+		extract(wp_parse_args($instance, array(
+			'username' => '', 
+			'items' => 5, 
+			'cache_life' => 3600
+		)));
+		
 		?>
 		<p>
 			<label for="<?php echo $this->get_field_id('username'); ?>">
-				<?php _e('Username:'); ?>
+				<?php _e('Pinterest username:'); ?>
 			</label> 
 			<input 
 				class="widefat" 
 				id="<?php echo $this->get_field_id('username'); ?>" 
 				name="<?php echo $this->get_field_name('username'); ?>" 
 				type="text" 
-				value="<?php echo esc_attr($instance['username']); ?>" />
+				value="<?php echo esc_attr($username); ?>" />
+		</p>
+		<p>
+			<label for="<?php echo $this->get_field_id('items'); ?>">
+				<?php _e('Items:'); ?>
+			</label> 
+			<input 
+				class="widefat" 
+				id="<?php echo $this->get_field_id('items'); ?>" 
+				name="<?php echo $this->get_field_name('items'); ?>" 
+				type="text" 
+				value="<?php echo esc_attr($items); ?>" />
+		</p>
+		<p>
+			<label for="<?php echo $this->get_field_id('cache_life'); ?>">
+				<?php _e('Cache life:'); ?>
+			</label> 
+			<input 
+				class="widefat" 
+				id="<?php echo $this->get_field_id('cache_life'); ?>" 
+				name="<?php echo $this->get_field_name('cache_life'); ?>" 
+				type="text" 
+				value="<?php echo esc_attr($cache_life); ?>" />
 		</p>
 		<?php
 	}
 	
 	function update($new_instance, $old_instance) {
 		$instance = array();
-		$instance['username'] = strip_tags( $new_instance['username']);
+		
+		$instance['username'] = strip_tags($new_instance['username']);
+		$instance['items'] = strip_tags($new_instance['items']);
+		$instance['cache_life'] = strip_tags($new_instance['cache_life']);
+		
 		return $instance;
 	}
 
 	function widget($args, $instance) {
-		extract($args/* , EXTR_SKIP */);
-		
+		extract($args);
 		$username = $instance['username'];
+		
+		if ($username == '')
+			return;
 		
 		//$title = apply_filters('widget_title', $instance['title']);
 		$title = 
@@ -69,7 +97,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_title . $title . $after_title;
 		
 		echo '<ul>';
-		foreach ($rss->get_items(0, 5) as $item) {
+		foreach ($rss->get_items(0, $instance['items']) as $item) {
 			$title = esc_attr(strip_tags($item->get_title()));
 			$link = $item->get_link();
 			$desc = $item->get_description();
