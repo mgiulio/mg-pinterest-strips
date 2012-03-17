@@ -81,44 +81,40 @@ class mg_Widget_Pinterest extends WP_Widget {
 		if ($username == '')
 			return;
 		
-		//$title = apply_filters('widget_title', $instance['title']);
+		$feedUrl = "http://pinterest.com/$username/feed.rss";		
+		$rss = fetch_feed($feedUrl);
+		if (is_wp_error($rss))
+			return;
+		
+		$title = apply_filters('widget_title', $instance['title']);
 		$title = 
 			'<a href="http://pinterest.com/' . $username . '">' . 
 			$username . 
 			'</a> on <a href="http://pinterest.com">Pinterest</a>';
-		
-		$feedUrl = "http://pinterest.com/$username/feed.rss";
-
-		$rss = fetch_feed($feedUrl);
-		if (is_wp_error($rss))
-			return;
 
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		
 		$pinWidth = 50;
-		$numCols = 4;//floor($availWidth / $colWidth);
+		$numCols = 4;
 		$margin = 1;
 		
 		$colWidth = $pinWidth + $margin;
-		$colWidthPlusOne = $colWidth + 1;
-		$pinboardWidth = $colWidth*$numCols;
-		$availWidth = $pinboardWidth - 2*$marging-$margin;
+		$pinboardInnerWidth = $colWidth*$numCols - 2*$marging-$margin;
 		
 		$cols = array();
 		$c = 0;
-		foreach ($rss->get_items(0, 40/* $instance['items'] */) as $item) {
+		foreach ($rss->get_items(0, $instance['items']) as $item) {
 			$title = esc_attr(strip_tags($item->get_title()));
 			$link = $item->get_link();
 			$desc = $item->get_description();
 			$imgSrc = array();
 			preg_match('/src="(.*)"/', $desc, $imgSrc);
 			
-			//$cols[$c][] = "<a href='$link'><img style='border: 1px solid #000; margin: 0; margin-bottom: 0; padding:0;' src='{$imgSrc[1]}' title='$title' alt='$title'></a>";
 			$cols[$c][] = "<img style='max-width: none; display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='{$imgSrc[1]}' title='$title' alt='$title'>";
 			$c = ($c+1) % $numCols;
 		}
-		echo "<div class='pinboard' style='width: {$availWidth}px; margin: 10px auto; padding: {$margin}px; background-color: #000;'>";
+		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: {$margin}px; background-color: #000;'>";
 		foreach ($cols as $i => $c) {
 			echo "<div class='col' style='width: " . ($i < $numCols-1 ? $colWidth : $colWidth-1) . "px; float: left; margin: 0; padding: 0'>";
 			echo implode('', $c);
