@@ -97,8 +97,11 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_title . $title . $after_title;
 		
 		$pinboardWidth = 200;
-		$colWidth = 50;
-		$numCols = floor($pinboardWidth / $colWidth);
+		$pinWidth = 50;
+		$margin = 2;
+		$colWidth = $pinWidth + $margin;
+		$availWidth = $pinboardWidth - 2*$marging-$margin;
+		$numCols = floor($availWidth / $colWidth);
 		$cols = array();
 		$c = 0;
 		foreach ($rss->get_items(0, $instance['items']) as $item) {
@@ -108,15 +111,17 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$imgSrc = array();
 			preg_match('/src="(.*)"/', $desc, $imgSrc);
 			
-			$cols[$c][] = "<a href='$link'><img src='{$imgSrc[1]}' title='$title' alt='$title'></a>";
+			//$cols[$c][] = "<a href='$link'><img style='border: 1px solid #000; margin: 0; margin-bottom: 0; padding:0;' src='{$imgSrc[1]}' title='$title' alt='$title'></a>";
+			$cols[$c][] = "<img style='display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='{$imgSrc[1]}' title='$title' alt='$title'>";
 			$c = ($c+1) % $numCols;
 		}
-		echo "<div class='pinboard' style='width: {$pinboardWidth}px; margin: 0 auto; height: 80px; background-color: #f0f0f0;'>";
+		echo "<div class='pinboard' style='width: {$availWidth}px; margin: 10px auto; padding: {$margin}px; background-color: #000;'>";
 		foreach ($cols as $c) {
-			echo "<div class='col' style='width: {$colWidth}px; float: left;'>";
+			echo "<div class='col' style='width: {$colWidth}px; float: left; margin: 0; padding: 0'>";
 			echo implode('', $c);
 			echo "</div>";
 		}
+		echo "<div style='clear: both;'></div>";
 		echo "</div>";
 		
 		echo $after_widget;
