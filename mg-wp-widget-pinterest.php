@@ -96,15 +96,18 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		
-		$pinboardWidth = 200;
 		$pinWidth = 50;
-		$margin = 2;
+		$numCols = 4;//floor($availWidth / $colWidth);
+		$margin = 1;
+		
 		$colWidth = $pinWidth + $margin;
+		$colWidthPlusOne = $colWidth + 1;
+		$pinboardWidth = $colWidth*$numCols;
 		$availWidth = $pinboardWidth - 2*$marging-$margin;
-		$numCols = floor($availWidth / $colWidth);
+		
 		$cols = array();
 		$c = 0;
-		foreach ($rss->get_items(0, $instance['items']) as $item) {
+		foreach ($rss->get_items(0, 40/* $instance['items'] */) as $item) {
 			$title = esc_attr(strip_tags($item->get_title()));
 			$link = $item->get_link();
 			$desc = $item->get_description();
@@ -112,16 +115,16 @@ class mg_Widget_Pinterest extends WP_Widget {
 			preg_match('/src="(.*)"/', $desc, $imgSrc);
 			
 			//$cols[$c][] = "<a href='$link'><img style='border: 1px solid #000; margin: 0; margin-bottom: 0; padding:0;' src='{$imgSrc[1]}' title='$title' alt='$title'></a>";
-			$cols[$c][] = "<img style='display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='{$imgSrc[1]}' title='$title' alt='$title'>";
+			$cols[$c][] = "<img style='max-width: none; display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='{$imgSrc[1]}' title='$title' alt='$title'>";
 			$c = ($c+1) % $numCols;
 		}
 		echo "<div class='pinboard' style='width: {$availWidth}px; margin: 10px auto; padding: {$margin}px; background-color: #000;'>";
-		foreach ($cols as $c) {
-			echo "<div class='col' style='width: {$colWidth}px; float: left; margin: 0; padding: 0'>";
+		foreach ($cols as $i => $c) {
+			echo "<div class='col' style='width: " . ($i < $numCols-1 ? $colWidth : $colWidth-1) . "px; float: left; margin: 0; padding: 0'>";
 			echo implode('', $c);
 			echo "</div>";
 		}
-		echo "<div style='clear: both;'></div>";
+		echo "<div style='clear: both;'>&nbsp;</div>";
 		echo "</div>";
 		
 		echo $after_widget;
