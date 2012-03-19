@@ -111,7 +111,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$imgSrc = array();
 			preg_match('/src="(.*)"/', $desc, $imgSrc);
 			
-			$cols[$c][] = "<img style='max-width: none; display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='{$imgSrc[1]}' title='$title' alt='$title'>";
+			$cols[$c][] = "<a href='$link'><img style='max-width: none; display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='{$imgSrc[1]}' title='$title' alt='$title'></a>";
 			$c = ($c+1) % $numCols;
 		}
 		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: {$margin}px; background-color: #000;'>";
@@ -132,3 +132,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 }
 
 add_action('widgets_init', create_function('', 'register_widget("mg_Widget_Pinterest");'));
+//add_action('wp_head', 'mg_widget_pinterest_on_wp_head');
+
+/* function mg_widget_pinterest_on_wp_head() {
+	echo "<style type='text/css'></style>";
+} */
