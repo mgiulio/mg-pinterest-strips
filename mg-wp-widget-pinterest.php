@@ -10,6 +10,16 @@ Author URI: http://mgiulio.altervista.org
 License: GPL2
 */
 
+/*
+ * Setting paths and urls.
+ */
+global
+	$mg_pin_plugin_dir,
+	$mg_pin_plugin_url
+;
+$mg_pin_plugin_dir = plugin_dir_path( __FILE__ );
+$mg_pin_plugin_url = plugin_dir_url( __FILE__ );
+
 class mg_Widget_Pinterest extends WP_Widget {
 
 	function __construct() {
@@ -75,6 +85,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 
 	function widget($args, $instance) {
+		global $mg_pin_plugin_dir;
+		
 		extract($args);
 		$username = $instance['username'];
 		
@@ -104,24 +116,39 @@ class mg_Widget_Pinterest extends WP_Widget {
 		
 		$cols = array();
 		$c = 0;
+		$i = 0;
 		foreach ($rss->get_items(0, $instance['items']) as $item) {
 			$title = esc_attr(strip_tags($item->get_title()));
 			$link = $item->get_link();
 			$desc = $item->get_description();
 			$imgSrc = array();
-			preg_match('/src="(.*)"/', $desc, $imgSrc);
+			preg_match('/src="([^"]+)"/', $desc, $imgSrc);
+			//preg_match('/src="(.*)"/', $desc, $imgSrc);
+			$imgUrl = $imgSrc[1];
 			
-			$cols[$c][] = "<a href='$link'><img style='max-width: none; display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='{$imgSrc[1]}' title='$title' alt='$title'></a>";
+			$cols[$c][] = "<a href='$link'><img style='max-width: none; display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='$imgUrl' title='$title' alt='$title'></a>";
 			$c = ($c+1) % $numCols;
+			
+			$pinIm = imagecreatefromjpeg($imgUrl);
+			$pinW = imagesx($pinIm);
+			$pinH = imagesy($pinIm);
+			$pinAspectRatio = $pinW / (float)$pinH;
+			$thumbW = $pinWidth;
+			$thumbH = $thumbW / $pinAspectRatio;
+			$thumbIm = imagecreatetruecolor($thumbW, $thumbH);
+			imagecopyresized($thumbIm, $pinIm, 0, 0, 0, 0, $thumbW, $thumbH, $pinW, $pinH);
+			$thumbUrl = $mg_pin_plugin_dir . "thumb-{$i}.jpg";
+			imagejpeg($thumbIm, $thumbUrl);
+			$i++;
 		}
-		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: {$margin}px; background-color: #000;'>";
+		/* echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: {$margin}px; background-color: #000;'>";
 		foreach ($cols as $i => $c) {
 			echo "<div class='col' style='width: " . ($i < $numCols-1 ? $colWidth : $colWidth-1) . "px; float: left; margin: 0; padding: 0'>";
 			echo implode('', $c);
 			echo "</div>";
 		}
 		echo "<div style='clear: both;'>&nbsp;</div>";
-		echo "</div>";
+		echo "</div>"; */
 		
 		echo $after_widget;
 
