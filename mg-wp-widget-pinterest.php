@@ -10,18 +10,7 @@ Author URI: http://mgiulio.altervista.org
 License: GPL2
 */
 
-/*
- * Setting paths and urls.
- */
-global
-	$mg_pin_plugin_dir,
-	$mg_pin_plugin_url
-;
-$mg_pin_plugin_dir = plugin_dir_path( __FILE__ );
-$mg_pin_plugin_url = plugin_dir_url( __FILE__ );
-
 class mg_Widget_Pinterest extends WP_Widget {
-
 	function __construct() {
 		parent::__construct(
 			'mg-widget-pinterest', // Root HTML id attr
@@ -29,8 +18,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 			array('description' => __( 'A Pinterest Widget', 'text_domain' ))
 		);
 		
-		$this->plugin_dir = plugin_dir_path( __FILE__ );
-		$this->plugin_url = plugin_dir_url( __FILE__ );
+		$this->plugin_dir = plugin_dir_path(__FILE__);
+		$this->plugin_url = plugin_dir_url(__FILE__);
 	}
 	
 	function form($instance) {
@@ -114,8 +103,6 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 
 	function widget($args, $instance) {
-		global $mg_pin_plugin_dir;
-		
 		extract($args);
 		$username = $instance['username'];
 		
@@ -175,7 +162,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$thumbH = $thumbW / $pinAspectRatio;
 			$thumbIm = imagecreatetruecolor($thumbW, $thumbH);
 			imagecopyresized($thumbIm, $pinIm, 0, 0, 0, 0, $thumbW, $thumbH, $pinW, $pinH);
-			$thumbUrl = $mg_pin_plugin_dir . "thumb-{$i}.jpg";
+			$thumbUrl = $this->plugin_dir . "thumb-{$i}.jpg";
 			imagejpeg($thumbIm, $thumbUrl);
 			$i++;
 		}
