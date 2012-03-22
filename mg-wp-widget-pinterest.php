@@ -25,6 +25,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 		if (!file_exists($this->cache_dir))
 			mkdir($this->cache_dir);
 		$this->cache_url = $this->plugin_url . 'cache/';
+		
+		$this->must_generate = true;
 	}
 	
 	function form($instance) {
@@ -103,6 +105,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		$instance['strip_width'] = strip_tags($new_instance['strip_width']);
 		$instance['num_strips'] = strip_tags($new_instance['num_strips']);
 		$instance['cache_life'] = strip_tags($new_instance['cache_life']);
+		//$instance['must_regenerate'] = true;
 		
 		return $instance;
 	}
@@ -118,6 +121,11 @@ class mg_Widget_Pinterest extends WP_Widget {
 		$rss = fetch_feed($feedUrl);
 		if (is_wp_error($rss))
 			return;
+		if (/* feed is old || */
+			!file_exists($this->cache_dir . "markup-{$this->number}.html") ||
+			!file_exists($this->cache_dir . "sprite-{$this->number}.jpg")
+		)
+			$this->must_regenerate = true;
 		
 		$title = apply_filters('widget_title', $instance['title']);
 		$title = 
@@ -127,9 +135,17 @@ class mg_Widget_Pinterest extends WP_Widget {
 
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
-		//$this->buildPinboard($rss);
-		//$this->buildPinboard_noBorders($rss);
-		$this->build_pinboard_no_borders_sprite($rss, $instance['strip_width'], $instance['num_strips']);
+		
+		if ($this->must_regenerate) {
+			ob_start();
+			$this->build_pinboard_no_borders_sprite($rss, $instance['strip_width'], $instance['num_strips']);
+			fwrite(fopen($this->cache_dir . "markup-{$this->number}.html", 'w'), ob_get_contents());
+			ob_end_flush();
+			$this->must_regenerate = false;
+		}
+		else
+			readfile($this->cache_dir . "markup-{$this->number}.html");
+		
 		echo $after_widget;
 
 		$rss->__destruct();
