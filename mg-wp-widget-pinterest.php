@@ -227,14 +227,15 @@ class mg_Widget_Pinterest extends WP_Widget {
 		$spriteH = 0;
 		foreach ($items as $item) {
 			$im = imagecreatefromjpeg($this->getImageUrl($item->get_description()));
-			$pinIm[] = $im;
 			
-			$pinW = imagesx($im);
-			$pinH = imagesy($im);
-			$pinAspectRatio = $pinW / (float)$pinH;
-			$thumbH = $stripW / $pinAspectRatio;
+			$w = imagesx($im);
+			$h = imagesy($im);
+			$aspectRatio = $w / (float)$h;
+			$thumb_h = $stripW / $aspectRatio;
 			
-			$spriteH += $thumbH;
+			$spriteH += $thumb_h;
+			
+			$pinIm[] = array('im' => $im, 'w' => $w, 'h' => $h, 'thumb_h' => $thumb_h);
 		}
 		$spriteIm = imagecreatetruecolor($stripW, $spriteH);
 		
@@ -249,18 +250,15 @@ class mg_Widget_Pinterest extends WP_Widget {
 			
 			// Make thumbnail and append it to the sprite
 			$currIm = array_shift($pinIm);
-			$pinW = imagesx($currIm);
-			$pinH = imagesy($currIm);
-			$pinAspectRatio = $pinW / (float)$pinH;
-			$thumbH = $stripW / $pinAspectRatio;
-			imagecopyresampled($spriteIm, $currIm, 0, $y, 0, 0, $stripW, $thumbH, $pinW, $pinH);
-			imagedestroy($currIm);
+			$thumb_h = $currIm['thumb_h'];
+			imagecopyresampled($spriteIm, $currIm['im'], 0, $y, 0, 0, $stripW, $thumb_h, $currIm['w'], $currIm['h']);
+			imagedestroy($currIm['im']);
 			
 			// Generate the markup for this item
-			$cols[$c][] = "<a href='$link' title='$title' style='display: block; width: {$stripW}px; height: {$thumbH}px; margin: 0; padding: 0; background: url($spriteUrl) no-repeat 0 -{$y}px; text-indent: -9999px;'>$title</a>";
+			$cols[$c][] = "<a href='$link' title='$title' style='display: block; width: {$stripW}px; height: {$thumb_h}px; margin: 0; padding: 0; background: url($spriteUrl) no-repeat 0 -{$y}px; text-indent: -9999px;'>$title</a>";
 			$c = ($c+1) % $numStrips;
 			
-			$y += $thumbH;
+			$y += $thumb_h;
 		}
 		// Save the sprite
 		imagejpeg($spriteIm, $this->plugin_dir . "sprite.jpg");
