@@ -28,6 +28,9 @@ class mg_Widget_Pinterest extends WP_Widget {
 			'Pinterest Widget', // Name
 			array('description' => __( 'A Pinterest Widget', 'text_domain' ))
 		);
+		
+		$this->plugin_dir = plugin_dir_path( __FILE__ );
+		$this->plugin_url = plugin_dir_url( __FILE__ );
 	}
 	
 	function form($instance) {
@@ -107,42 +110,12 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		//$this->buildPinboard($rss);
-		$this->buildPinboard_noBorders($rss);
+		//$this->buildPinboard_noBorders($rss);
+		$this->buildPinboard_noBorders_sprite($rss, 50, 4);
 		echo $after_widget;
 
 		$rss->__destruct();
 		unset($rss);
-	}
-	
-	function buildPinboard_noBorders($rss) {
-		$pinWidth = 50;
-		$numCols = 4;
-		
-		$colWidth = $pinWidth;
-		$pinboardInnerWidth = $colWidth*$numCols;
-		
-		$cols = array();
-		$c = 0;
-		foreach ($rss->get_items(0, $instance['items']) as $item) {
-			$title = esc_attr(strip_tags($item->get_title()));
-			$link = $item->get_link();
-			$desc = $item->get_description();
-			$imgSrc = array();
-			preg_match('/src="([^"]+)"/', $desc, $imgSrc);
-			//preg_match('/src="(.*)"/', $desc, $imgSrc);
-			$imgUrl = $imgSrc[1];
-			
-			$cols[$c][] = "<a href='$link'><img style='max-width: none; display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='$imgUrl' title='$title' alt='$title'></a>";
-			$c = ($c+1) % $numCols;
-		}
-		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: 0px; background-color: none;'>";
-			foreach ($cols as $i => $c) {
-				echo "<div class='col' style='width: {$pinWidth}px; float: left; margin: 0; padding: 0'>";
-				echo implode('', $c);
-				echo "</div>";
-			}
-			echo "<div style='clear: both;'>&nbsp;</div>";
-		echo "</div>";
 	}
 	
 	function buildPinboard($rss) {
@@ -188,6 +161,114 @@ class mg_Widget_Pinterest extends WP_Widget {
 			}
 			echo "<div style='clear: both;'>&nbsp;</div>";
 		echo "</div>";
+	}
+	
+	function buildPinboard_noBorders($rss) {
+		$pinWidth = 50;
+		$numCols = 4;
+		
+		$colWidth = $pinWidth;
+		$pinboardInnerWidth = $colWidth*$numCols;
+		
+		$cols = array();
+		$c = 0;
+		$i = 0;
+		foreach ($rss->get_items(0, $instance['items']) as $item) {
+			$title = esc_attr(strip_tags($item->get_title()));
+			$link = $item->get_link();
+			$desc = $item->get_description();
+			$imgSrc = array();
+			preg_match('/src="([^"]+)"/', $desc, $imgSrc);
+			//preg_match('/src="(.*)"/', $desc, $imgSrc);
+			$imgUrl = $imgSrc[1];
+			
+			$cols[$c][] = "<a href='$link'><img style='max-width: none; display: block; width: {$pinWidth}px; margin: 0; padding: 0; margin-bottom: {$margin}px;' src='$imgUrl' title='$title' alt='$title'></a>";
+			$c = ($c+1) % $numCols;
+			
+			$pinIm = imagecreatefromjpeg($imgUrl);
+			$pinW = imagesx($pinIm);
+			$pinH = imagesy($pinIm);
+			$pinAspectRatio = $pinW / (float)$pinH;
+			$thumbW = $pinWidth;
+			$thumbH = $thumbW / $pinAspectRatio;
+			$thumbIm = imagecreatetruecolor($thumbW, $thumbH);
+			imagecopyresized($thumbIm, $pinIm, 0, 0, 0, 0, $thumbW, $thumbH, $pinW, $pinH);
+			$i++;
+		}
+		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: 0px; background-color: none;'>";
+			foreach ($cols as $i => $c) {
+				echo "<div class='col' style='width: {$pinWidth}px; float: left; margin: 0; padding: 0'>";
+				echo implode('', $c);
+				echo "</div>";
+			}
+			echo "<div style='clear: both;'>&nbsp;</div>";
+		echo "</div>";
+	}
+	
+	function buildPinboard_noBorders_sprite($rss, $stripW, $numStrips) {
+		$pinboardInnerWidth = $stripW * $numStrips;
+		
+		$items = $rss->get_items(0, $instance['items']);
+		
+		// Compute the sprite height and allocate it
+		$spriteH = 0;
+		foreach ($items as $item) {
+			$im = imagecreatefromjpeg($this->getImageUrl($item->get_description()));
+			$pinIm[] = $im;
+			
+			$pinW = imagesx($im);
+			$pinH = imagesy($im);
+			$pinAspectRatio = $pinW / (float)$pinH;
+			$thumbH = $stripW / $pinAspectRatio;
+			
+			$spriteH += $thumbH;
+		}
+		$spriteIm = imagecreatetruecolor($stripW, $spriteH);
+		
+		$cols = array();
+		$c = 0;
+		$y = 0;
+		foreach ($items as $item) {
+			// Get item info
+			$title = esc_attr(strip_tags($item->get_title()));
+			$link = $item->get_link();
+			
+			// Make thumbnail and append it to the sprite
+			$currIm = array_shift($pinIm);
+			$pinW = imagesx($currIm);
+			$pinH = imagesy($currIm);
+			$pinAspectRatio = $pinW / (float)$pinH;
+			$thumbH = $stripW / $pinAspectRatio;
+			imagecopyresized($spriteIm, $currIm, 0, $y, 0, 0, $stripW, $thumbH, $pinW, $pinH);
+			$y += $thumbH;
+			imagedestroy($currIm);
+			
+			// Generate the markup for this item
+			$cols[$c][] = 
+				"<a href='$link'>" . 
+					"<img style='max-width: none; display: block; width: {$stripW}px; margin: 0; padding: 0;' src='$imgUrl' title='$title' alt='$title'>" . 
+				"</a>";
+			$c = ($c+1) % $numStrips;
+		}
+		// Save the sprite
+		$spritePath = $this->plugin_dir . "sprite.jpg";
+		imagejpeg($spriteIm, $spritePath);
+		imagedestroy($spriteIm);
+		
+		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: 0px; background-color: none;'>";
+			foreach ($cols as $i => $c) {
+				echo "<div class='col' style='width: {$stripW}px; float: left; margin: 0; padding: 0'>";
+				echo implode('', $c);
+				echo "</div>";
+			}
+			echo "<div style='clear: both;'>&nbsp;</div>";
+		echo "</div>";
+	}
+	
+	function getImageUrl($itemDesc) {
+		$imgSrc = array();
+		preg_match('/src="([^"]+)"/', $itemDesc, $imgSrc);
+		return $imgSrc[1];
 	}
 }
 
