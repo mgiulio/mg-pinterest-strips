@@ -226,7 +226,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		// Compute the sprite height and allocate it
 		$spriteH = 0;
 		foreach ($items as $item) {
-			$im = imagecreatefromjpeg($this->getImageUrl($item->get_description()));
+			$im = imagecreatefromjpeg($this->get_image_url($item->get_description()));
 			
 			$w = imagesx($im);
 			$h = imagesy($im);
@@ -274,7 +274,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo "</div>";
 	}
 	
-	function getImageUrl($itemDesc) {
+	function get_image_url($itemDesc) {
 		$imgSrc = array();
 		preg_match('/src="([^"]+)"/', $itemDesc, $imgSrc);
 		return $imgSrc[1];
