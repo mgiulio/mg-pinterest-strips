@@ -240,7 +240,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$pinH = imagesy($currIm);
 			$pinAspectRatio = $pinW / (float)$pinH;
 			$thumbH = $stripW / $pinAspectRatio;
-			imagecopyresized($spriteIm, $currIm, 0, $y, 0, 0, $stripW, $thumbH, $pinW, $pinH);
+			imagecopyresampled($spriteIm, $currIm, 0, $y, 0, 0, $stripW, $thumbH, $pinW, $pinH);
 			imagedestroy($currIm);
 			
 			// Generate the markup for this item
