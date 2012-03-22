@@ -124,7 +124,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_title . $title . $after_title;
 		//$this->buildPinboard($rss);
 		//$this->buildPinboard_noBorders($rss);
-		$this->buildPinboard_noBorders_sprite($rss, $instance['strip_width'], $instance['num_strips']);
+		$this->build_pinboard_no_borders_sprite($rss, $instance['strip_width'], $instance['num_strips']);
 		echo $after_widget;
 
 		$rss->__destruct();
@@ -137,7 +137,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		$margin = 1;
 		
 		$colWidth = $pinWidth + $margin;
-		$pinboardInnerWidth = $colWidth*$numCols - 2*$marging-$margin;
+		$pinboard_inner_width = $colWidth*$numCols - 2*$marging-$margin;
 		
 		$cols = array();
 		$c = 0;
@@ -166,7 +166,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 			imagejpeg($thumbIm, $thumbUrl);
 			$i++;
 		}
-		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: {$margin}px; background-color: none;'>";
+		echo "<div class='pinboard' style='width: {$pinboard_inner_width}px; margin: 10px auto; padding: {$margin}px; background-color: none;'>";
 			foreach ($cols as $i => $c) {
 				echo "<div class='col' style='width: " . ($i < $numCols-1 ? $colWidth : $colWidth-1) . "px; float: left; margin: 0; padding: 0'>";
 				echo implode('', $c);
@@ -181,7 +181,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		$numCols = 4;
 		
 		$colWidth = $pinWidth;
-		$pinboardInnerWidth = $colWidth*$numCols;
+		$pinboard_inner_width = $colWidth*$numCols;
 		
 		$cols = array();
 		$c = 0;
@@ -208,7 +208,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 			imagecopyresized($thumbIm, $pinIm, 0, 0, 0, 0, $thumbW, $thumbH, $pinW, $pinH);
 			$i++;
 		}
-		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: 0px; background-color: none;'>";
+		echo "<div class='pinboard' style='width: {$pinboard_inner_width}px; margin: 10px auto; padding: 0px; background-color: none;'>";
 			foreach ($cols as $i => $c) {
 				echo "<div class='col' style='width: {$pinWidth}px; float: left; margin: 0; padding: 0'>";
 				echo implode('', $c);
@@ -218,8 +218,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo "</div>";
 	}
 	
-	function buildPinboard_noBorders_sprite($rss, $stripW, $numStrips) {
-		$pinboardInnerWidth = $stripW * $numStrips;
+	function build_pinboard_no_borders_sprite($rss, $stripW, $numStrips) {
+		$pinboard_inner_width = $stripW * $numStrips;
 		
 		$items = $rss->get_items(0, $instance['items']);
 		
@@ -266,7 +266,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		imagejpeg($spriteIm, $this->plugin_dir . "sprite.jpg");
 		imagedestroy($spriteIm);
 		
-		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: 0px; background-color: none;'>";
+		echo "<div class='pinboard' style='width: {$pinboard_inner_width}px; margin: 10px auto; padding: 0px; background-color: none;'>";
 			foreach ($cols as $i => $c) {
 				echo "<div class='col' style='width: {$stripW}px; float: left; margin: 0; padding: 0'>";
 				echo implode('', $c);
