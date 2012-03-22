@@ -37,6 +37,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 		extract(wp_parse_args($instance, array(
 			'username' => '', 
 			'items' => 5, 
+			'strip_width' => 50,
+			'num_strips' => 4,
 			'cache_life' => 3600
 		)));
 		
@@ -53,6 +55,28 @@ class mg_Widget_Pinterest extends WP_Widget {
 				value="<?php echo esc_attr($username); ?>" />
 		</p>
 		<p>
+			<label for="<?php echo $this->get_field_id('strip_width'); ?>">
+				<?php _e('Strip width(px):'); ?>
+			</label> 
+			<input 
+				class="widefat" 
+				id="<?php echo $this->get_field_id('strip_width'); ?>" 
+				name="<?php echo $this->get_field_name('strip_width'); ?>" 
+				type="text" 
+				value="<?php echo esc_attr($strip_width); ?>" />
+		</p>
+		<p>
+			<label for="<?php echo $this->get_field_id('num_strips'); ?>">
+				<?php _e('How many strips?'); ?>
+			</label> 
+			<input 
+				class="widefat" 
+				id="<?php echo $this->get_field_id('num_strips'); ?>" 
+				name="<?php echo $this->get_field_name('num_strips'); ?>" 
+				type="text" 
+				value="<?php echo esc_attr($num_strips); ?>" />
+		</p>
+		<p>
 			<label for="<?php echo $this->get_field_id('items'); ?>">
 				<?php _e('Items:'); ?>
 			</label> 
@@ -65,7 +89,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		</p>
 		<p>
 			<label for="<?php echo $this->get_field_id('cache_life'); ?>">
-				<?php _e('Cache life:'); ?>
+				<?php _e('Cache life(seconds):'); ?>
 			</label> 
 			<input 
 				class="widefat" 
@@ -82,6 +106,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 		
 		$instance['username'] = strip_tags($new_instance['username']);
 		$instance['items'] = strip_tags($new_instance['items']);
+		$instance['strip_width'] = strip_tags($new_instance['strip_width']);
+		$instance['num_strips'] = strip_tags($new_instance['num_strips']);
 		$instance['cache_life'] = strip_tags($new_instance['cache_life']);
 		
 		return $instance;
@@ -111,7 +137,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_title . $title . $after_title;
 		//$this->buildPinboard($rss);
 		//$this->buildPinboard_noBorders($rss);
-		$this->buildPinboard_noBorders_sprite($rss, 50, 4);
+		$this->buildPinboard_noBorders_sprite($rss, $instance['strip_width'], $instance['num_strips']);
 		echo $after_widget;
 
 		$rss->__destruct();
