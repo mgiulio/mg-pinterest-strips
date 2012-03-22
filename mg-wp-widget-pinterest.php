@@ -225,6 +225,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		}
 		$spriteIm = imagecreatetruecolor($stripW, $spriteH);
 		
+		$spriteUrl = $this->plugin_url . 'sprite.jpg';
 		$cols = array();
 		$c = 0;
 		$y = 0;
@@ -240,19 +241,16 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$pinAspectRatio = $pinW / (float)$pinH;
 			$thumbH = $stripW / $pinAspectRatio;
 			imagecopyresized($spriteIm, $currIm, 0, $y, 0, 0, $stripW, $thumbH, $pinW, $pinH);
-			$y += $thumbH;
 			imagedestroy($currIm);
 			
 			// Generate the markup for this item
-			$cols[$c][] = 
-				"<a href='$link'>" . 
-					"<img style='max-width: none; display: block; width: {$stripW}px; margin: 0; padding: 0;' src='$imgUrl' title='$title' alt='$title'>" . 
-				"</a>";
+			$cols[$c][] = "<a href='$link' title='$title' style='display: block; width: {$stripW}px; height: {$thumbH}px; margin: 0; padding: 0; background: url($spriteUrl) no-repeat 0 -{$y}px; text-indent: -9999px;'>$title</a>";
 			$c = ($c+1) % $numStrips;
+			
+			$y += $thumbH;
 		}
 		// Save the sprite
-		$spritePath = $this->plugin_dir . "sprite.jpg";
-		imagejpeg($spriteIm, $spritePath);
+		imagejpeg($spriteIm, $this->plugin_dir . "sprite.jpg");
 		imagedestroy($spriteIm);
 		
 		echo "<div class='pinboard' style='width: {$pinboardInnerWidth}px; margin: 10px auto; padding: 0px; background-color: none;'>";
