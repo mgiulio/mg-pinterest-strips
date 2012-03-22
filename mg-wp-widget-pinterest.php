@@ -20,6 +20,11 @@ class mg_Widget_Pinterest extends WP_Widget {
 		
 		$this->plugin_dir = plugin_dir_path(__FILE__);
 		$this->plugin_url = plugin_dir_url(__FILE__);
+		
+		$this->cache_dir = $this->plugin_dir . 'cache/';
+		if (!file_exists($this->cache_dir))
+			mkdir($this->cache_dir);
+		$this->cache_url = $this->plugin_url . 'cache/';
 	}
 	
 	function form($instance) {
@@ -238,8 +243,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$pinIm[] = array('im' => $im, 'w' => $w, 'h' => $h, 'thumb_h' => $thumb_h);
 		}
 		$spriteIm = imagecreatetruecolor($stripW, $spriteH);
-		
-		$spriteUrl = $this->plugin_url . 'sprite.jpg';
+
+		$spriteUrl = $this->cache_url . "sprite-{$this->number}.jpg";
 		$cols = array();
 		$c = 0;
 		$y = 0;
@@ -261,7 +266,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$y += $thumb_h;
 		}
 		// Save the sprite
-		imagejpeg($spriteIm, $this->plugin_dir . "sprite.jpg");
+		imagejpeg($spriteIm, $this->cache_dir . "sprite-{$this->number}.jpg");
 		imagedestroy($spriteIm);
 		
 		echo "<div class='pinboard' style='width: {$pinboard_inner_width}px; margin: 10px auto; padding: 0px; background-color: none;'>";
