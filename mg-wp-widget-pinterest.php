@@ -10,6 +10,64 @@ Author URI: http://mgiulio.altervista.org
 License: GPL2
 */
 
+require_once (ABSPATH . WPINC . '/class-feed.php');
+class SimplePie_Cache_Extras extends SimplePie
+{
+	function get_cache_object()
+	{
+//		$cache =& new $this->cache_class($this->cache_location, call_user_func($this->cache_name_function, $this->feed_url), 'spc');
+		$cache = call_user_func(array($this->cache_class, 'create'), $this->cache_location, call_user_func($this->cache_name_function, $this->feed_url), 'spc');
+		return $cache;
+	}
+ 
+	function get_cache_filename()
+	{
+		$cache = $this->get_cache_object();
+		return $cache->name;
+	}
+ 
+	function get_cache_timestamp()
+	{
+		$cache = $this->get_cache_object();
+		return $cache->mtime();
+	}
+ 
+	function get_cache_time_remaining($format = false)
+	{
+		$cache = $this->get_cache_object();
+		$remaining = ($cache->mtime() + $this->cache_duration) - time();
+ 
+		if ($format)
+		{
+			return SimplePie_Misc::time_hms($remaining);
+		}
+		else
+		{
+			return $remaining;
+		}
+	}
+}
+
+function mg_fetch_feed($url, /* $cache_life, */ &$feed) {
+	require_once (ABSPATH . WPINC . '/class-feed.php');
+
+	$feed = new SimplePie_Cache_Extras();
+	$feed->set_feed_url($url);
+	$feed->set_cache_class('WP_Feed_Cache');
+	$feed->set_file_class('WP_SimplePie_File');
+	$feed->set_cache_duration(60/* $cache_life *//* apply_filters('wp_feed_cache_transient_lifetime', 43200, $url) */);
+	//do_action_ref_array( 'wp_feed_options', array( &$feed, $url ) );
+	
+	$is_cache_expired = $feed->get_cache_time_remaining() < 0;
+	$feed->init();
+	$feed->handle_content_type();
+
+	if ( $feed->error() )
+		return new WP_Error('simplepie-error', $feed->error());
+
+	return $is_cache_expired;
+}
+
 class mg_Widget_Pinterest extends WP_Widget {
 	function __construct() {
 		parent::__construct(
@@ -103,8 +161,9 @@ class mg_Widget_Pinterest extends WP_Widget {
 		$instance['num_strips'] = strip_tags($new_instance['num_strips']);
 		$instance['cache_life'] = strip_tags($new_instance['cache_life']);
 		
-		$feed_url = "http://pinterest.com/{$instance['username']}/feed.rss";		
-		$rss = fetch_feed($feed_url);
+		$feed_url = "http://pinterest.com/{$instance['username']}/feed.rss";
+		$rss = NULL;
+		mg_fetch_feed($feed_url, $rss);
 		if (is_wp_error($rss))
 			return;
 		ob_start();
@@ -122,8 +181,9 @@ class mg_Widget_Pinterest extends WP_Widget {
 		if ($username == '')
 			return;
 		
-		$feedUrl = "http://pinterest.com/$username/feed.rss";		
-		$rss = fetch_feed($feedUrl);
+		$feed_url = "http://pinterest.com/$username/feed.rss";		
+		$rss = NULL;
+		$is_fresh = mg_fetch_feed($feed_url, $rss);
 		if (is_wp_error($rss))
 			return;
 		
@@ -136,7 +196,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		
-		if (/* feed is old || */
+		if ($is_fresh || 
 			!file_exists($this->cache_dir . "markup-{$this->number}.html") ||
 			!file_exists($this->cache_dir . "sprite-{$this->number}.jpg")
 		) {
