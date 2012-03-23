@@ -25,8 +25,6 @@ class mg_Widget_Pinterest extends WP_Widget {
 		if (!file_exists($this->cache_dir))
 			mkdir($this->cache_dir);
 		$this->cache_url = $this->plugin_url . 'cache/';
-		
-		$this->must_generate = true;
 	}
 	
 	function form($instance) {
@@ -99,13 +97,20 @@ class mg_Widget_Pinterest extends WP_Widget {
 	
 	function update($new_instance, $old_instance) {
 		$instance = array();
-		
 		$instance['username'] = strip_tags($new_instance['username']);
 		$instance['items'] = strip_tags($new_instance['items']);
 		$instance['strip_width'] = strip_tags($new_instance['strip_width']);
 		$instance['num_strips'] = strip_tags($new_instance['num_strips']);
 		$instance['cache_life'] = strip_tags($new_instance['cache_life']);
-		//$instance['must_regenerate'] = true;
+		
+		$feed_url = "http://pinterest.com/{$instance['username']}/feed.rss";		
+		$rss = fetch_feed($feed_url);
+		if (is_wp_error($rss))
+			return;
+		ob_start();
+		$this->build_pinboard_no_borders_sprite($rss, $instance['strip_width'], $instance['num_strips']);
+		fwrite(fopen($this->cache_dir . "markup-{$this->number}.html", 'w'), ob_get_contents());
+		ob_end_clean();
 		
 		return $instance;
 	}
@@ -121,11 +126,6 @@ class mg_Widget_Pinterest extends WP_Widget {
 		$rss = fetch_feed($feedUrl);
 		if (is_wp_error($rss))
 			return;
-		if (/* feed is old || */
-			!file_exists($this->cache_dir . "markup-{$this->number}.html") ||
-			!file_exists($this->cache_dir . "sprite-{$this->number}.jpg")
-		)
-			$this->must_regenerate = true;
 		
 		$title = apply_filters('widget_title', $instance['title']);
 		$title = 
@@ -136,12 +136,14 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		
-		if ($this->must_regenerate) {
+		if (/* feed is old || */
+			!file_exists($this->cache_dir . "markup-{$this->number}.html") ||
+			!file_exists($this->cache_dir . "sprite-{$this->number}.jpg")
+		) {
 			ob_start();
 			$this->build_pinboard_no_borders_sprite($rss, $instance['strip_width'], $instance['num_strips']);
 			fwrite(fopen($this->cache_dir . "markup-{$this->number}.html", 'w'), ob_get_contents());
 			ob_end_flush();
-			$this->must_regenerate = false;
 		}
 		else
 			readfile($this->cache_dir . "markup-{$this->number}.html");
