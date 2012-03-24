@@ -11,29 +11,23 @@ License: GPL2
 */
 
 require_once (ABSPATH . WPINC . '/class-feed.php');
-class SimplePie_Cache_Extras extends SimplePie
-{
-	function get_cache_object()
-	{
-//		$cache =& new $this->cache_class($this->cache_location, call_user_func($this->cache_name_function, $this->feed_url), 'spc');
+class SimplePie_Cache_Extras extends SimplePie {
+	function get_cache_object() {
 		$cache = call_user_func(array($this->cache_class, 'create'), $this->cache_location, call_user_func($this->cache_name_function, $this->feed_url), 'spc');
 		return $cache;
 	}
  
-	function get_cache_filename()
-	{
+	function get_cache_filename() {
 		$cache = $this->get_cache_object();
 		return $cache->name;
 	}
  
-	function get_cache_timestamp()
-	{
+	function get_cache_timestamp() {
 		$cache = $this->get_cache_object();
 		return $cache->mtime();
 	}
  
-	function get_cache_time_remaining($format = false)
-	{
+	function get_cache_time_remaining($format = false) {
 		$cache = $this->get_cache_object();
 		$remaining = ($cache->mtime() + $this->cache_duration) - time();
  
