@@ -106,7 +106,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 	function update($new_instance, $old_instance) {
 		$instance = array();
 		$instance['username'] = strip_tags($new_instance['username']);
-		$instance['items'] = strip_tags($new_instance['items']);
+		$instance['num_items'] = strip_tags($new_instance['num_items']);
 		$instance['strip_width'] = strip_tags($new_instance['strip_width']);
 		$instance['num_strips'] = strip_tags($new_instance['num_strips']);
 		$instance['cache_life'] = strip_tags($new_instance['cache_life']);
@@ -138,9 +138,9 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		
-		if ($this->must_regenerate_cache($instance['cache_life'])) {
+		if ($this->cache_is_invalid($instance['cache_life']) && ($pins = $this->fetch_feed($feed_url))) {
 			ob_start();
-			$this->build_pinboard($this->fetch_feed($feed_url), $instance['strip_width'], $instance['num_strips']);
+			$this->build_pinboard($pins, $instance['strip_width'], $instance['num_strips']);
 			fwrite(fopen($this->get_markup_path(), 'w'), ob_get_contents());
 			ob_end_flush();
 		}
@@ -206,7 +206,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		return $imgSrc[1];
 	}
 	
-	function must_regenerate_cache($cache_life) {
+	function cache_is_invalid($cache_life) {
 		$last_build_timestamp = filemtime($this->get_markup_path()); //http://it2.php.net/manual/en/function.clearstatcache.php
 		
 		return
