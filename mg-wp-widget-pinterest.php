@@ -138,7 +138,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		
-		if ($this->must_regenerate_cache()) {
+		if ($this->must_regenerate_cache($instance['cache_life'])) {
 			ob_start();
 			$this->build_pinboard($this->fetch_feed($feed_url), $instance['strip_width'], $instance['num_strips']);
 			fwrite(fopen($this->get_markup_path(), 'w'), ob_get_contents());
@@ -206,12 +206,11 @@ class mg_Widget_Pinterest extends WP_Widget {
 		return $imgSrc[1];
 	}
 	
-	function must_regenerate_cache() {
+	function must_regenerate_cache($cache_life) {
 		$last_build_timestamp = filemtime($this->get_markup_path()); //http://it2.php.net/manual/en/function.clearstatcache.php
-		$cache_lifetime = 120;
-
+		
 		return
-			$last_build_timestamp + $cache_lifetime <= time() ||
+			$last_build_timestamp + $cache_life <= time() ||
 			!file_exists($this->get_markup_path()) ||
 			!file_exists($this->get_sprite_path())
 		;
