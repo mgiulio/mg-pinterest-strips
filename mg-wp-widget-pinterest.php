@@ -38,7 +38,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 	function form($instance) {
 		extract(wp_parse_args($instance, array(
 			'username' => '', 
-			'items' => 5, 
+			'max_items' => 5, 
 			'strip_width' => 50,
 			'num_strips' => 4,
 			'cache_life' => 3600
@@ -79,15 +79,15 @@ class mg_Widget_Pinterest extends WP_Widget {
 				value="<?php echo esc_attr($num_strips); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id('items'); ?>">
-				<?php _e('Items:'); ?>
+			<label for="<?php echo $this->get_field_id('max_items'); ?>">
+				<?php _e('Max number of pins:'); ?>
 			</label> 
 			<input 
 				class="widefat" 
-				id="<?php echo $this->get_field_id('items'); ?>" 
-				name="<?php echo $this->get_field_name('items'); ?>" 
+				id="<?php echo $this->get_field_id('max_items'); ?>" 
+				name="<?php echo $this->get_field_name('max_items'); ?>" 
 				type="text" 
-				value="<?php echo esc_attr($items); ?>" />
+				value="<?php echo esc_attr($max_items); ?>" />
 		</p>
 		<p>
 			<label for="<?php echo $this->get_field_id('cache_life'); ?>">
@@ -106,14 +106,14 @@ class mg_Widget_Pinterest extends WP_Widget {
 	function update($new_instance, $old_instance) {
 		$instance = array();
 		$instance['username'] = strip_tags($new_instance['username']);
-		$instance['num_items'] = strip_tags($new_instance['num_items']);
+		$instance['max_items'] = strip_tags($new_instance['max_items']);
 		$instance['strip_width'] = strip_tags($new_instance['strip_width']);
 		$instance['num_strips'] = strip_tags($new_instance['num_strips']);
 		$instance['cache_life'] = strip_tags($new_instance['cache_life']);
 		
 		$feed_url = "http://pinterest.com/{$instance['username']}/feed.rss";
 		ob_start();
-		$this->build_pinboard($this->fetch_feed($feed_url), $instance['strip_width'], $instance['num_strips']);
+		$this->build_pinboard($this->fetch_feed($feed_url, $instance['max_items']), $instance['strip_width'], $instance['num_strips']);
 		fwrite(fopen($this->cache_dir . "markup-{$this->number}.html", 'w'), ob_get_contents());
 		ob_end_clean();
 		
@@ -138,7 +138,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		
-		if ($this->cache_is_invalid($instance['cache_life']) && ($pins = $this->fetch_feed($feed_url))) {
+		if ($this->cache_is_invalid($instance['cache_life']) && ($pins = $this->fetch_feed($feed_url, $instance['max_items']))) {
 			ob_start();
 			$this->build_pinboard($pins, $instance['strip_width'], $instance['num_strips']);
 			fwrite(fopen($this->get_markup_path(), 'w'), ob_get_contents());
@@ -216,17 +216,21 @@ class mg_Widget_Pinterest extends WP_Widget {
 		;
 	}
 	
-	function fetch_feed($url) {
+	function fetch_feed($url, $max_items) {
 		$rss = simplexml_load_file($url);
 		// Eorhandling
 
 		$pins = array();
-		foreach ($rss->channel->item as $item)
+		$i = 0;
+		foreach ($rss->channel->item as $item) {
 			$pins[] = array(
 				'title' => (string)$item->title,//$title = esc_attr(strip_tags($item->get_title()));
 				'link' =>(string)$item->link,
 				'image_url' => $this->get_image_url((string)$item->description)
 			);
+			if (++$i == $max_items)
+				break;
+		}
 		
 		return $pins;
 	}
