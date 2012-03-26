@@ -10,6 +10,10 @@ Author URI: http://mgiulio.altervista.org
 License: GPL2
 */
 
+function mg_log($msg) {
+	trigger_error("mg-wp-widget-pinterest: $msg", E_USER_NOTICE);
+}
+
 class mg_Widget_Pinterest extends WP_Widget {
 	function __construct() {
 		parent::__construct(
@@ -111,6 +115,9 @@ class mg_Widget_Pinterest extends WP_Widget {
 		$instance['num_strips'] = strip_tags($new_instance['num_strips']);
 		$instance['cache_life'] = strip_tags($new_instance['cache_life']);
 		
+		if ($instance['username'] == '')
+			return false;
+		
 		$feed_url = "http://pinterest.com/{$instance['username']}/feed.rss";
 		ob_start();
 		$this->build_pinboard($this->fetch_feed($feed_url, $instance['max_items']), $instance['strip_width'], $instance['num_strips']);
@@ -129,7 +136,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		
 		$feed_url = "http://pinterest.com/$username/feed.rss";		
 		
-		$title = apply_filters('widget_title', $instance['title']);
+		//$title = apply_filters('widget_title', $instance['title']);
 		$title = 
 			'<a href="http://pinterest.com/' . $username . '">' . 
 			$username . 
@@ -151,11 +158,15 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function build_pinboard($pins, $stripW, $numStrips) {
+		mg_log("build_pinboard: start");
+		
 		$pinboard_inner_width = $stripW * $numStrips;
 		
 		// Compute the sprite height and allocate it
+		mg_log("Sprite height computation: start");
 		$spriteH = 0;
 		foreach ($pins as $pin) {
+			mg_log("imagecreatefromjpeg({$pin['image_url']})");
 			$im = imagecreatefromjpeg($pin['image_url']);
 			
 			$w = imagesx($im);
@@ -168,6 +179,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$pinIm[] = array('im' => $im, 'w' => $w, 'h' => $h, 'thumb_h' => $thumb_h);
 		}
 		$spriteIm = imagecreatetruecolor($stripW, $spriteH);
+		mg_log("Sprite height computation: end");
 
 		$spriteUrl = $this->cache_url . "sprite-{$this->number}.jpg";
 		$cols = array();
@@ -181,7 +193,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 			imagedestroy($currIm['im']);
 			
 			// Generate the markup for this item
-			$cols[$c][] = "<a href='{$pin['link']}' title='$title' style='display: block; width: {$stripW}px; height: {$thumb_h}px; margin: 0; padding: 0; background: url($spriteUrl) no-repeat 0 -{$y}px; text-indent: -9999px;'>{$pin['title']}</a>";
+			$cols[$c][] = "<a href='{$pin['link']}' title='{$pin['title']}' style='display: block; width: {$stripW}px; height: {$thumb_h}px; margin: 0; padding: 0; background: url($spriteUrl) no-repeat 0 -{$y}px; text-indent: -9999px;'>{$pin['title']}</a>";
 			$c = ($c+1) % $numStrips;
 			
 			$y += $thumb_h;
@@ -198,6 +210,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 			}
 			echo "<div style='clear: both;'>&nbsp;</div>";
 		echo "</div>";
+		
+		mg_log("build_pinboard: end");
 	}
 	
 	function get_image_url($itemDesc) {
@@ -217,8 +231,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function fetch_feed($url, $max_items) {
+		mg_log("simplexml_load_file('$url'): start");
 		$rss = simplexml_load_file($url);
-		// Eorhandling
+		mg_log("simplexml_load_file('$url'): end");
+		// Error handling
 
 		$pins = array();
 		$i = 0;
