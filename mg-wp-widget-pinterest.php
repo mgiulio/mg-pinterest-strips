@@ -40,8 +40,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function form($instance) {
+		mg_log('form');
+		
 		extract(wp_parse_args($instance, array(
-			'username' => '', 
+			'username' => 'mgiulio', 
 			'max_items' => 5, 
 			'strip_width' => 50,
 			'num_strips' => 4,
@@ -108,23 +110,60 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function update($new_instance, $old_instance) {
-		$instance = array();
-		$instance['username'] = strip_tags($new_instance['username']);
-		$instance['max_items'] = strip_tags($new_instance['max_items']);
-		$instance['strip_width'] = strip_tags($new_instance['strip_width']);
-		$instance['num_strips'] = strip_tags($new_instance['num_strips']);
-		$instance['cache_life'] = strip_tags($new_instance['cache_life']);
+		mg_log('update');
 		
-		if ($instance['username'] == '')
-			return false;
+		$instance = $old_instance;
 		
+		$username = $new_instance['username'];
+		if ($username != '' && $this->is_valid_pinterest_username($username))
+			$instance['username'] = $username;
+		
+		$max_items = $new_instance['max_items'];
+		if ($max_items != '') {
+			$max_items = (int)$max_items;
+			if ($max_items >= 1)
+				$instance['max_items'] = $max_items;
+		}
+		
+		$strip_width = $new_instance['strip_width'];
+		if ($strip_width != '') {
+			$strip_width = (int)$strip_width;
+			if ($strip_width >= 10 && $strip_width <= 1024)
+				$instance['strip_width'] = $strip_width;
+		}
+		
+		$num_strips = $new_instance['num_strips'];
+		if ($num_strips != '') {
+			$num_strips = (int)$num_strips;
+			if ($num_strips >= 1 && $num_strips <= 1024)
+				$instance['num_strips'] = $num_strips;
+		}
+		
+		$cache_life = $new_instance['cache_life'];
+		if ($cache_life != '') {
+			$cache_life = (int)$cache_life;
+			if ($cache_life >= 60 && $cache_life <= 360000)
+				$instance['cache_life'] = $cache_life;
+		}
+		
+		if (
+			$instance['username'] != $old_instance['username'] ||
+			$instance['max_items'] != $old_instance['max_items'] ||
+			$instance['strip_width'] != $old_instance['strip_width'] ||
+			$instance['num_strips'] != $old_instance['num_strips'] ||
+			$instance['cache_life'] != $old_instance['cache_life']
+		)
+			$this->regenerate_cache($instance);
+		
+		return $instance;
+	}
+	
+	function regenerate_cache($instance) {
 		$feed_url = "http://pinterest.com/{$instance['username']}/feed.rss";
 		ob_start();
 		$this->build_pinboard($this->fetch_feed($feed_url, $instance['max_items']), $instance['strip_width'], $instance['num_strips']);
 		fwrite(fopen($this->cache_dir . "markup-{$this->number}.html", 'w'), ob_get_contents());
 		ob_end_clean();
-		
-		return $instance;
 	}
 
 	function widget($args, $instance) {
@@ -249,6 +288,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 		}
 		
 		return $pins;
+	}
+	
+	function is_valid_pinterest_username($username) {
+		return true;
 	}
 }
 
