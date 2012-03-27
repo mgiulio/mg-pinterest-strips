@@ -51,7 +51,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 		)));
 		
 		if (isset($instance['errors'])) {
-			print_r($instance['errors']);
+			echo "<ul style='color: #ff0000;'>";
+			foreach ($instance['errors'] as $err)
+				echo "<li>$err<li>";
+			echo "</ul>";
 		}
 		
 		?>
