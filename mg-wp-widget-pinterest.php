@@ -117,8 +117,6 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function update($new_instance, $old_instance) {
-		mg_log('update');
-		
 		$instance = $old_instance;
 		unset($instance['errors']);
 		
@@ -126,7 +124,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		if ($username == '') 
 			$errors[] = "The username is required";
 		else if (!$this->is_valid_pinterest_username($username))
-			$errors[] = "Invalid Pinterest username";
+			$errors[] = "$username is an invalid Pinterest username";
 		else
 			$instance['username'] = $username;
 		
@@ -325,6 +323,13 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function is_valid_pinterest_username($username) {
+		$rsp = wp_remote_get("http://pinterest.com/$username");
+		if (is_wp_error($rsp)) {
+			// $code = $rsp->get_error_message();
+			return false;
+		}
+		if (wp_remote_retrieve_response_code($rsp) == 404)
+			return false;
 		return true;
 	}
 }
