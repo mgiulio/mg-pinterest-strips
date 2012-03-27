@@ -300,9 +300,17 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function fetch_feed($url, $max_items) {
-		mg_log("simplexml_load_file('$url'): start");
-		$rss = simplexml_load_file($url);
-		mg_log("simplexml_load_file('$url'): end");
+		mg_log("Fetching $url");
+		$rsp = wp_remote_get($url);
+		if (is_wp_error($rsp)) {
+			// $code = $rsp->get_error_message();
+		}
+		if (wp_remote_retrieve_response_code($rsp) != 200) {
+		}
+		$feed_str = wp_remote_retrieve_body($rsp);
+		
+		mg_log("Parsing feed: start");
+		$rss = simplexml_load_string($feed_str);
 		// Error handling
 
 		$pins = array();
@@ -316,6 +324,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 			if (++$i == $max_items)
 				break;
 		}
+		
+		mg_log("Parsing feed: end");
 		
 		return $pins;
 	}
