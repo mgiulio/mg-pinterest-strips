@@ -40,8 +40,6 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function form($instance) {
-		mg_log('form');
-		
 		extract(wp_parse_args($instance, array(
 			'username' => 'mgiulio', 
 			'max_items' => 5, 
@@ -334,9 +332,20 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 }
 
+register_activation_hook(__FILE__, 'mg_widget_pinterest_on_activation');
 add_action('widgets_init', create_function('', 'register_widget("mg_Widget_Pinterest");'));
 //add_action('wp_head', 'mg_widget_pinterest_on_wp_head');
 
 /* function mg_widget_pinterest_on_wp_head() {
 	echo "<style type='text/css'></style>";
 } */
+
+function mg_widget_pinterest_on_activation() {
+	if (
+		version_compare(get_bloginfo('version'), '2.8', '<') ||
+		version_compare(phpversion(), '5.2.4' , '<') ||
+		!extension_loaded('gd') ||
+		!extension_loaded('simplexml')
+	)
+		deactivate_plugins(basename(__FILE__));
+}
