@@ -50,6 +50,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 			'cache_life' => 3600
 		)));
 		
+		if (isset($instance['errors'])) {
+			print_r($instance['errors']);
+		}
+		
 		?>
 		<p>
 			<label for="<?php echo $this->get_field_id('username'); ?>">
@@ -113,36 +117,60 @@ class mg_Widget_Pinterest extends WP_Widget {
 		mg_log('update');
 		
 		$instance = $old_instance;
+		unset($instance['errors']);
 		
 		$username = $new_instance['username'];
-		if ($username != '' && $this->is_valid_pinterest_username($username))
+		if ($username == '') 
+			$errors[] = "The username is required";
+		else if (!$this->is_valid_pinterest_username($username))
+			$errors[] = "Invalid Pinterest username";
+		else
 			$instance['username'] = $username;
 		
 		$max_items = $new_instance['max_items'];
-		if ($max_items != '') {
-			$max_items = (int)$max_items;
-			if ($max_items >= 1)
-				$instance['max_items'] = $max_items;
-		}
+		if ($max_items == '')
+			$errors[] = "The max number of items is required";
+		else if (($max_items = (int)$max_items) < 1)
+			$errors[] = "Max number of items must be greater than one";
+		else
+			$instance['max_items'] = $max_items;
 		
 		$strip_width = $new_instance['strip_width'];
-		if ($strip_width != '') {
+		if ($strip_width == '')
+			$errors[] = "The strip width field is required";
+		else {
 			$strip_width = (int)$strip_width;
-			if ($strip_width >= 10 && $strip_width <= 1024)
+			if (!($strip_width >= 10))
+				$errors[] = "The strip width must be >= 10";
+			else if (!($strip_width <= 1024))
+				$errors[] = "The strip width must be <= 1024";
+			else
 				$instance['strip_width'] = $strip_width;
 		}
 		
 		$num_strips = $new_instance['num_strips'];
-		if ($num_strips != '') {
+		if ($num_strips == '')
+			$errors[] = "The number of strips field is required";
+		else {
 			$num_strips = (int)$num_strips;
-			if ($num_strips >= 1 && $num_strips <= 1024)
+			if (!($num_strips >= 1))
+				$errors[] = "num_strips must be >= 1";
+			else if (!($num_strips <= 1024))
+				$errors[] = "num_strips must be <= 1024";
+			else
 				$instance['num_strips'] = $num_strips;
 		}
 		
 		$cache_life = $new_instance['cache_life'];
-		if ($cache_life != '') {
+		if ($cache_life == '')
+			$errors[] = "cache life is required";
+		else {
 			$cache_life = (int)$cache_life;
-			if ($cache_life >= 60 && $cache_life <= 360000)
+			if (!($cache_life >= 60))
+				$errors[] = "cache life must be >= 60";
+			else if (!($cache_life <= 360000))
+				$errors[] = "cache life must be <= 3600000";
+			else
 				$instance['cache_life'] = $cache_life;
 		}
 		
@@ -154,6 +182,9 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$instance['cache_life'] != $old_instance['cache_life']
 		)
 			$this->regenerate_cache($instance);
+			
+		if (!empty($errors))
+			$instance['errors'] = $errors;
 		
 		return $instance;
 	}
