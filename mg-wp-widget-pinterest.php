@@ -299,7 +299,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 				echo implode('', $c);
 				echo "</div>";
 			}
-			echo "<div style='clear: both;'>&nbsp;</div>";
+			//echo "<div style='clear: both;'>&nbsp;</div>";
 		echo "</div>";
 		
 		mg_log("build_pinboard: end");
