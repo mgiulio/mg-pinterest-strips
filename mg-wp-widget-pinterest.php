@@ -190,10 +190,17 @@ class mg_Widget_Pinterest extends WP_Widget {
 	
 	function regenerate_cache($instance) {
 		$feed_url = "http://pinterest.com/{$instance['username']}/feed.rss";
+		
+		$feed = $this->fetch_feed($feed_url, $instance['max_items']);
+		if (!$feed)
+			return false;
+			
 		ob_start();
-		$this->build_pinboard($this->fetch_feed($feed_url, $instance['max_items']), $instance['strip_width'], $instance['num_strips']);
-		fwrite(fopen($this->cache_dir . "markup-{$this->number}.html", 'w'), ob_get_contents());
+		if ($ok = $this->build_pinboard($feed, $instance['strip_width'], $instance['num_strips']))
+			fwrite(fopen($this->get_markup_path(), 'w'), ob_get_contents());
 		ob_end_clean();
+		
+		return $ok;
 	}
 
 	function widget($args, $instance) {
@@ -214,15 +221,25 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
 		
-		if ($this->cache_is_invalid($instance['cache_life']) && ($pins = $this->fetch_feed($feed_url, $instance['max_items']))) {
-			ob_start();
-			$this->build_pinboard($pins, $instance['strip_width'], $instance['num_strips']);
-			fwrite(fopen($this->get_markup_path(), 'w'), ob_get_contents());
-			ob_end_flush();
-		}
-		else
+		if (!$this->cache_is_invalid($instance['cache_life']))
 			readfile($this->get_markup_path());
-		
+		else {
+			$pins = $this->fetch_feed($feed_url, $instance['max_items']);
+			if (!$pins)
+				readfile($this->get_markup_path());
+			else {
+				ob_start();
+				$ok = $this->build_pinboard($pins, $instance['strip_width'], $instance['num_strips']);
+				if ($ok) {
+					fwrite(fopen($this->get_markup_path(), 'w'), ob_get_contents());
+					ob_end_flush();
+				}
+				else
+					ob_end_clean();
+					readfile($this->get_markup_path());
+			}
+		}		
+			
 		echo $after_widget;
 	}
 	
@@ -237,6 +254,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 		foreach ($pins as $pin) {
 			mg_log("imagecreatefromjpeg({$pin['image_url']})");
 			$im = imagecreatefromjpeg($pin['image_url']);
+			if (!$im)
+				return false;
 			
 			$w = imagesx($im);
 			$h = imagesy($im);
@@ -268,8 +287,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$y += $thumb_h;
 		}
 		// Save the sprite
-		imagejpeg($spriteIm, $this->get_sprite_path());
+		$ok = imagejpeg($spriteIm, $this->get_sprite_path());
 		imagedestroy($spriteIm);
+		if (!$ok)
+			return false;
 		
 		echo "<div class='pinboard' style='width: {$pinboard_inner_width}px; margin: 10px auto; padding: 0px; background-color: none;'>";
 			foreach ($cols as $i => $c) {
@@ -281,6 +302,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 		echo "</div>";
 		
 		mg_log("build_pinboard: end");
+		
+		return true;
 	}
 	
 	function get_image_url($itemDesc) {
@@ -302,22 +325,24 @@ class mg_Widget_Pinterest extends WP_Widget {
 	function fetch_feed($url, $max_items) {
 		mg_log("Fetching $url");
 		$rsp = wp_remote_get($url);
-		if (is_wp_error($rsp)) {
-			// $code = $rsp->get_error_message();
-		}
-		if (wp_remote_retrieve_response_code($rsp) != 200) {
-		}
+		if (is_wp_error($rsp))
+			return NULL;
+		
+		if (wp_remote_retrieve_response_code($rsp) != 200)
+			return NULL;
+		
 		$feed_str = wp_remote_retrieve_body($rsp);
 		
 		mg_log("Parsing feed: start");
 		$rss = simplexml_load_string($feed_str);
-		// Error handling
+		if (!$rss)
+			return NULL;
 
 		$pins = array();
 		$i = 0;
 		foreach ($rss->channel->item as $item) {
 			$pins[] = array(
-				'title' => (string)$item->title,//$title = esc_attr(strip_tags($item->get_title()));
+				'title' => (string)$item->title,
 				'link' =>(string)$item->link,
 				'image_url' => $this->get_image_url((string)$item->description)
 			);
@@ -332,12 +357,13 @@ class mg_Widget_Pinterest extends WP_Widget {
 	
 	function is_valid_pinterest_username($username) {
 		$rsp = wp_remote_get("http://pinterest.com/$username");
-		if (is_wp_error($rsp)) {
-			// $code = $rsp->get_error_message();
+		
+		if (is_wp_error($rsp))
 			return false;
-		}
+		
 		if (wp_remote_retrieve_response_code($rsp) == 404)
 			return false;
+		
 		return true;
 	}
 }
