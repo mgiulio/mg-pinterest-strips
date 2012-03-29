@@ -234,9 +234,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 					fwrite(fopen($this->get_markup_path(), 'w'), ob_get_contents());
 					ob_end_flush();
 				}
-				else
+				else {
 					ob_end_clean();
 					readfile($this->get_markup_path());
+				}
 			}
 		}		
 			
@@ -370,11 +371,6 @@ class mg_Widget_Pinterest extends WP_Widget {
 
 register_activation_hook(__FILE__, 'mg_widget_pinterest_on_activation');
 add_action('widgets_init', create_function('', 'register_widget("mg_Widget_Pinterest");'));
-//add_action('wp_head', 'mg_widget_pinterest_on_wp_head');
-
-/* function mg_widget_pinterest_on_wp_head() {
-	echo "<style type='text/css'></style>";
-} */
 
 function mg_widget_pinterest_on_activation() {
 	if (
