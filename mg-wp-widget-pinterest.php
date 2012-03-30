@@ -29,6 +29,9 @@ class mg_Widget_Pinterest extends WP_Widget {
 		if (!file_exists($this->cache_dir))
 			mkdir($this->cache_dir);
 		$this->cache_url = $this->plugin_url . 'cache/';
+		
+		$this->create_image_from_url = ini_get('allow_url_fopen') ? 'create_image_remote_files' : 'create_image_wp_remote';
+			
 	}
 	
 	function get_markup_path() {
@@ -253,8 +256,8 @@ class mg_Widget_Pinterest extends WP_Widget {
 		mg_log("Sprite height computation: start");
 		$spriteH = 0;
 		foreach ($pins as $pin) {
-			mg_log("imagecreatefromjpeg({$pin['image_url']})");
-			$im = imagecreatefromjpeg($pin['image_url']);
+			mg_log("Fetching {$pin['image_url']}");
+			$im = call_user_func(array($this, $this->create_image_from_url), $pin['image_url']);
 			if (!$im)
 				return false;
 			
@@ -366,6 +369,22 @@ class mg_Widget_Pinterest extends WP_Widget {
 			return false;
 		
 		return true;
+	}
+	
+	function create_image_remote_files($url) {
+		return imagecreatefromjpeg($url);
+	}
+	
+	function create_image_wp_remote($url) {
+		$rsp = wp_remote_get($url);
+		if (is_wp_error($rsp))
+			return NULL;
+		
+		if (wp_remote_retrieve_response_code($rsp) != 200)
+			return NULL;
+		
+		$img_data = wp_remote_retrieve_body($rsp);
+		return imagecreatefromstring($img_data);
 	}
 }
 
