@@ -30,8 +30,6 @@ class mg_Widget_Pinterest extends WP_Widget {
 			mkdir($this->cache_dir);
 		$this->cache_url = $this->plugin_url . 'cache/';
 		
-		$this->create_image_from_url = ini_get('allow_url_fopen') ? 'create_image_remote_files' : 'create_image_wp_remote';
-			
 	}
 	
 	function get_markup_path() {
@@ -257,7 +255,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		$spriteH = 0;
 		foreach ($pins as $pin) {
 			mg_log("Fetching {$pin['image_url']}");
-			$im = call_user_func(array($this, $this->create_image_from_url), $pin['image_url']);
+			$im = $this->create_image_from_url($pin['image_url']);
 			if (!$im)
 				return false;
 			
@@ -371,11 +369,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		return true;
 	}
 	
-	function create_image_remote_files($url) {
-		return imagecreatefromjpeg($url);
-	}
-	
-	function create_image_wp_remote($url) {
+	function create_image_from_url($url) {
 		$rsp = wp_remote_get($url);
 		if (is_wp_error($rsp))
 			return NULL;
