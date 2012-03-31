@@ -238,17 +238,23 @@ class mg_Widget_Pinterest extends WP_Widget {
 		
 		if ($username == '')
 			return;
+			
+		$board = $instance['board'];
 		
-		$feed_url = $instance['board'] != '' ? 
-			"http://pinterest.com/$username/{$instance['board']}.rss" :
+		$feed_url = $board != '' ? 
+			"http://pinterest.com/$username/$board.rss" :
 			"http://pinterest.com/$username/feed.rss"
 		;		
 		
 		//$title = apply_filters('widget_title', $instance['title']);
-		$title = 
-			'<a href="http://pinterest.com/' . $username . '">' . 
-			$username . 
-			'</a> on <a href="http://pinterest.com">Pinterest</a>';
+		$title = $board ?
+			"<a href='http://pinterest.com/$username'>$username</a>'s " .
+			"<a href='http://pinterest.com/$username/$board'>$board</a> on " .
+			"<a href='http://pinterest.com'>Pinterest</a>"
+			: 
+			"<a href='http://pinterest.com/$username'>$username</a> on " .
+			"<a href='http://pinterest.com'>Pinterest</a>"
+		;
 
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
