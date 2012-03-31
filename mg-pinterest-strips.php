@@ -1,9 +1,9 @@
 <?php
 
 /*
-Plugin Name: mg-wp-widget-pinterest
+Plugin Name: Pinterest Strips
 Plugin URI: http://mgiulio.altervista.org
-Description: Shows your Pinterest pins
+Description: Display Pinterest pins as vertical strips
 Version: 0.1
 Author: mgiulio (Giulio Mainardi)
 Author URI: http://mgiulio.altervista.org
@@ -11,15 +11,15 @@ License: GPL2
 */
 
 function mg_log($msg) {
-	trigger_error("mg-wp-widget-pinterest: $msg", E_USER_NOTICE);
+	trigger_error("mg-pinterest-strips: $msg", E_USER_NOTICE);
 }
 
-class mg_Widget_Pinterest extends WP_Widget {
+class mg_Pinterest_Strips extends WP_Widget {
 	function __construct() {
 		parent::__construct(
-			'mg-widget-pinterest', // Root HTML id attr
-			'Pinterest Widget', // Name
-			array('description' => __( 'A Pinterest Widget', 'text_domain' ))
+			'mg-pinterest-strips', // Root HTML id attr
+			'Pinterest Strips', // Name
+			array('description' => __( 'Display Pinterest pins as vertical strips', 'text_domain' ))
 		);
 		
 		$this->plugin_dir = plugin_dir_path(__FILE__);
@@ -352,7 +352,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function cache_is_invalid($cache_life) {
-		$last_build_timestamp = filemtime($this->get_markup_path()); //http://it2.php.net/manual/en/function.clearstatcache.php
+		$last_build_timestamp = filemtime($this->get_markup_path());
 		
 		return
 			$last_build_timestamp + $cache_life <= time() ||
@@ -431,10 +431,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 }
 
-register_activation_hook(__FILE__, 'mg_widget_pinterest_on_activation');
-add_action('widgets_init', create_function('', 'register_widget("mg_Widget_Pinterest");'));
+register_activation_hook(__FILE__, 'mg_pinterest_strips_on_activation');
+add_action('widgets_init', create_function('', 'register_widget("mg_Pinterest_Strips");'));
 
-function mg_widget_pinterest_on_activation() {
+function mg_pinterest_strips_on_activation() {
 	if (
 		version_compare(get_bloginfo('version'), '2.8', '<') ||
 		version_compare(phpversion(), '5.2.4' , '<') ||
