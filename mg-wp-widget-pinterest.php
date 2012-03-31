@@ -246,7 +246,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 			"http://pinterest.com/$username/feed.rss"
 		;		
 		
-		//$title = apply_filters('widget_title', $instance['title']);
+		$title = apply_filters('widget_title', $title, $instance, $this->id_base);
 		$title = $board ?
 			"<a href='http://pinterest.com/$username'>$username</a>'s " .
 			"<a href='http://pinterest.com/$username/$board'>$board</a> on " .
