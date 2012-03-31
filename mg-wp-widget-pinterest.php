@@ -43,6 +43,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 	function form($instance) {
 		extract(wp_parse_args($instance, array(
 			'username' => 'mgiulio', 
+			'board' => '', 
 			'max_items' => 5, 
 			'strip_width' => 50,
 			'num_strips' => 4,
@@ -67,6 +68,17 @@ class mg_Widget_Pinterest extends WP_Widget {
 				name="<?php echo $this->get_field_name('username'); ?>" 
 				type="text" 
 				value="<?php echo esc_attr($username); ?>" />
+		</p>
+		<p>
+			<label for="<?php echo $this->get_field_id('board'); ?>">
+				<?php _e('Board(not required):'); ?>
+			</label> 
+			<input 
+				class="widefat" 
+				id="<?php echo $this->get_field_id('board'); ?>" 
+				name="<?php echo $this->get_field_name('board'); ?>" 
+				type="text" 
+				value="<?php echo esc_attr($board); ?>" />
 		</p>
 		<p>
 			<label for="<?php echo $this->get_field_id('strip_width'); ?>">
@@ -126,6 +138,18 @@ class mg_Widget_Pinterest extends WP_Widget {
 			$errors[] = "$username is an invalid Pinterest username";
 		else
 			$instance['username'] = $username;
+			
+		$board = $new_instance['board'];
+		if ($board == '')
+			$instance['board'] = $board;
+		else {
+			$board = strtolower($board);
+			$board = str_replace(' ', '-', $board);
+			if (!$this->is_valid_board($board, $username))
+				$errors[] = "Board '$board' not found";
+			else
+				$instance['board'] = $board;
+		}
 		
 		$max_items = $new_instance['max_items'];
 		if ($max_items == '')
@@ -176,6 +200,7 @@ class mg_Widget_Pinterest extends WP_Widget {
 		
 		if (
 			$instance['username'] != $old_instance['username'] ||
+			$instance['board'] != $old_instance['board'] ||
 			$instance['max_items'] != $old_instance['max_items'] ||
 			$instance['strip_width'] != $old_instance['strip_width'] ||
 			$instance['num_strips'] != $old_instance['num_strips'] ||
@@ -190,7 +215,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 	}
 	
 	function regenerate_cache($instance) {
-		$feed_url = "http://pinterest.com/{$instance['username']}/feed.rss";
+		$feed_url = $instance['board'] != '' ? 
+			"http://pinterest.com/{$instance['username']}/{$instance['board']}.rss" :
+			"http://pinterest.com/{$instance['username']}/feed.rss"
+		;		
 		
 		$feed = $this->fetch_feed($feed_url, $instance['max_items']);
 		if (!$feed)
@@ -211,7 +239,10 @@ class mg_Widget_Pinterest extends WP_Widget {
 		if ($username == '')
 			return;
 		
-		$feed_url = "http://pinterest.com/$username/feed.rss";		
+		$feed_url = $instance['board'] != '' ? 
+			"http://pinterest.com/$username/{$instance['board']}.rss" :
+			"http://pinterest.com/$username/feed.rss"
+		;		
 		
 		//$title = apply_filters('widget_title', $instance['title']);
 		$title = 
@@ -360,6 +391,18 @@ class mg_Widget_Pinterest extends WP_Widget {
 	function is_valid_pinterest_username($username) {
 		$rsp = wp_remote_get("http://pinterest.com/$username");
 		
+		if (is_wp_error($rsp))
+			return false;
+		
+		if (wp_remote_retrieve_response_code($rsp) == 404)
+			return false;
+		
+		return true;
+	}
+	
+	function is_valid_board($board_name, $username) {
+		$rsp = wp_remote_get("http://pinterest.com/$username/$board_name.rss");
+
 		if (is_wp_error($rsp))
 			return false;
 		
