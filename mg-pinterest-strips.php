@@ -143,8 +143,8 @@ class mg_Pinterest_Strips extends WP_Widget {
 		$username = $new_instance['username'];
 		if ($username	 == '') 
 			$errors[] = "The username is required";
-		else if (!$this->is_valid_pinterest_username($username))
-			$errors[] = "$username is an invalid Pinterest username";
+		else if (($res = $this->is_valid_pinterest_username($username)) != 'ok')
+			$errors[] = $res;
 		else
 			$instance['username'] = $username;
 			
@@ -405,12 +405,12 @@ class mg_Pinterest_Strips extends WP_Widget {
 		$rsp = wp_remote_get("http://pinterest.com/$username");
 		
 		if (is_wp_error($rsp))
-			return false;
+			return "Something went bad in trying to validate user $username";
 		
 		if (wp_remote_retrieve_response_code($rsp) == 404)
-			return false;
+			return "User $username does not exist on Pinterest";
 		
-		return true;
+		return 'ok';
 	}
 	
 	function is_valid_board($board_name, $username) {
