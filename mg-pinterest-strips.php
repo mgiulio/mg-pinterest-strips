@@ -128,11 +128,20 @@ class mg_Pinterest_Strips extends WP_Widget {
 	}
 	
 	function update($new_instance, $old_instance) {
+		//unset($old_instance['errors']);
+		$old_instance = wp_parse_args($old_instance, array(
+			'username' => 'mgiulio', 
+			'board' => '', 
+			'max_items' => 5, 
+			'strip_width' => 50,
+			'num_strips' => 4,
+			'cache_life' => 3600
+		));
 		$instance = $old_instance;
-		unset($instance['errors']);
+		//unset($instance['errors']);
 		
 		$username = $new_instance['username'];
-		if ($username == '') 
+		if ($username	 == '') 
 			$errors[] = "The username is required";
 		else if (!$this->is_valid_pinterest_username($username))
 			$errors[] = "$username is an invalid Pinterest username";
@@ -352,12 +361,10 @@ class mg_Pinterest_Strips extends WP_Widget {
 	}
 	
 	function cache_is_invalid($cache_life) {
-		$last_build_timestamp = filemtime($this->get_markup_path());
-		
 		return
-			$last_build_timestamp + $cache_life <= time() ||
 			!file_exists($this->get_markup_path()) ||
-			!file_exists($this->get_sprite_path())
+			!file_exists($this->get_sprite_path()) ||
+			filemtime($this->get_markup_path()) + $cache_life <= time() // Consider last build timestamp
 		;
 	}
 	
