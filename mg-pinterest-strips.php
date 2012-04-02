@@ -129,11 +129,10 @@ class mg_Pinterest_Strips extends WP_Widget {
 	}
 	
 	function update($new_instance, $old_instance) {
-		//unset($old_instance['errors']);
+		unset($old_instance['errors']);
 		$old_instance = wp_parse_args($old_instance, $this->instance_default);
 		$instance = $old_instance;
-		//unset($instance['errors']);
-		
+				
 		$username = $new_instance['username'];
 		if ($username	 == '') 
 			$errors[] = "The username is required";
