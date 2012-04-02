@@ -248,7 +248,6 @@ class mg_Pinterest_Strips extends WP_Widget {
 			"http://pinterest.com/$username/feed.rss"
 		;		
 		
-		$title = apply_filters('widget_title', $title, $instance, $this->id_base);
 		$title = $board ?
 			"<a href='http://pinterest.com/$username'>$username</a>'s " .
 			"<a href='http://pinterest.com/$username/$board'>$board</a> on " .
@@ -257,6 +256,8 @@ class mg_Pinterest_Strips extends WP_Widget {
 			"<a href='http://pinterest.com/$username'>$username</a> on " .
 			"<a href='http://pinterest.com'>Pinterest</a>"
 		;
+		//$title = apply_filters('widget_title', $title, $this->id_base, $username, $board);
+		
 
 		echo $before_widget;
 		echo $before_title . $title . $after_title;
