@@ -30,6 +30,14 @@ class mg_Pinterest_Strips extends WP_Widget {
 			mkdir($this->cache_dir);
 		$this->cache_url = $this->plugin_url . 'cache/';
 		
+		$this->instance_default = array(
+			'username' => 'mgiulio', 
+			'board' => '', 
+			'max_items' => 40, 
+			'strip_width' => 50,
+			'num_strips' => 4,
+			'cache_life' => 3600
+		);
 	}
 	
 	function get_markup_path() {
@@ -41,14 +49,7 @@ class mg_Pinterest_Strips extends WP_Widget {
 	}
 	
 	function form($instance) {
-		extract(wp_parse_args($instance, array(
-			'username' => 'mgiulio', 
-			'board' => '', 
-			'max_items' => 5, 
-			'strip_width' => 50,
-			'num_strips' => 4,
-			'cache_life' => 3600
-		)));
+		extract(wp_parse_args($instance, $this->instance_default));
 		
 		if (isset($instance['errors'])) {
 			echo "<ul style='color: #ff0000;'>";
@@ -129,14 +130,7 @@ class mg_Pinterest_Strips extends WP_Widget {
 	
 	function update($new_instance, $old_instance) {
 		//unset($old_instance['errors']);
-		$old_instance = wp_parse_args($old_instance, array(
-			'username' => 'mgiulio', 
-			'board' => '', 
-			'max_items' => 5, 
-			'strip_width' => 50,
-			'num_strips' => 4,
-			'cache_life' => 3600
-		));
+		$old_instance = wp_parse_args($old_instance, $this->instance_default);
 		$instance = $old_instance;
 		//unset($instance['errors']);
 		
