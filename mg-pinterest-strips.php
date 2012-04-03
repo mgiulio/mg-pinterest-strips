@@ -10,12 +10,10 @@ Author URI: http://mgiulio.altervista.org
 License: GPL2
 */
 
-function mg_log($msg) {
-	trigger_error("mg-pinterest-strips: $msg", E_USER_NOTICE);
-}
-
 class mg_Pinterest_Strips extends WP_Widget {
 	function __construct() {
+		$this->logging_enabled = true;
+		
 		parent::__construct(
 			'mg-pinterest-strips', // Root HTML id attr
 			'Pinterest Strips', // Name
@@ -286,15 +284,15 @@ class mg_Pinterest_Strips extends WP_Widget {
 	}
 	
 	function build_pinboard($pins, $stripW, $numStrips) {
-		mg_log("build_pinboard: start");
+		$this->log("build_pinboard: start");
 		
 		$pinboard_inner_width = $stripW * $numStrips;
 		
 		// Compute the sprite height and allocate it
-		mg_log("Sprite height computation: start");
+		$this->log("Sprite height computation: start");
 		$spriteH = 0;
 		foreach ($pins as $pin) {
-			mg_log("Fetching {$pin['image_url']}");
+			$this->log("Fetching {$pin['image_url']}");
 			$im = $this->create_image_from_url($pin['image_url']);
 			if (!$im)
 				return false;
@@ -309,7 +307,7 @@ class mg_Pinterest_Strips extends WP_Widget {
 			$pinIm[] = array('im' => $im, 'w' => $w, 'h' => $h, 'thumb_h' => $thumb_h);
 		}
 		$spriteIm = imagecreatetruecolor($stripW, $spriteH);
-		mg_log("Sprite height computation: end");
+		$this->log("Sprite height computation: end");
 
 		$spriteUrl = $this->cache_url . "sprite-{$this->number}.jpg";
 		$cols = array();
@@ -343,7 +341,7 @@ class mg_Pinterest_Strips extends WP_Widget {
 			//echo "<div style='clear: both;'>&nbsp;</div>";
 		echo "</div>";
 		
-		mg_log("build_pinboard: end");
+		$this->log("build_pinboard: end");
 		
 		return true;
 	}
@@ -363,7 +361,7 @@ class mg_Pinterest_Strips extends WP_Widget {
 	}
 	
 	function fetch_feed($url, $max_items) {
-		mg_log("Fetching $url");
+		$this->log("Fetching $url");
 		$rsp = wp_remote_get($url);
 		if (is_wp_error($rsp))
 			return NULL;
@@ -373,7 +371,7 @@ class mg_Pinterest_Strips extends WP_Widget {
 		
 		$feed_str = wp_remote_retrieve_body($rsp);
 		
-		mg_log("Parsing feed: start");
+		$this->log("Parsing feed: start");
 		$rss = simplexml_load_string($feed_str);
 		if (!$rss)
 			return NULL;
@@ -390,7 +388,7 @@ class mg_Pinterest_Strips extends WP_Widget {
 				break;
 		}
 		
-		mg_log("Parsing feed: end");
+		$this->log("Parsing feed: end");
 		
 		return $pins;
 	}
@@ -429,6 +427,11 @@ class mg_Pinterest_Strips extends WP_Widget {
 		
 		$img_data = wp_remote_retrieve_body($rsp);
 		return imagecreatefromstring($img_data);
+	}
+	
+	function log($msg) {
+		if ($this->logging_enabled)
+			trigger_error("mg-pinterest-strips: $msg", E_USER_NOTICE);
 	}
 }
 
