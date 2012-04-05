@@ -12,7 +12,7 @@ License: GPL2
 
 class mg_Pinterest_Strips extends WP_Widget {
 	function __construct() {
-		$this->logging_enabled = true;
+		$this->logging_enabled = false;
 		
 		parent::__construct(
 			'mg-pinterest-strips', // Root HTML id attr
@@ -394,10 +394,14 @@ class mg_Pinterest_Strips extends WP_Widget {
 	}
 	
 	function is_valid_pinterest_username($username) {
-		$rsp = wp_remote_get("http://pinterest.com/$username");
+		$rsp = wp_remote_get("http://pinterest.com/$username/", 
+			array(
+				'timeout' => 60, 
+				'redirection' => 30
+		));
 		
 		if (is_wp_error($rsp))
-			return "Something went bad in trying to validate user $username";
+			return "Something went bad in trying to validate user $username: " . $rsp->get_error_message();
 		
 		if (wp_remote_retrieve_response_code($rsp) == 404)
 			return "User $username does not exist on Pinterest";
