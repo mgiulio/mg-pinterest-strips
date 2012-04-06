@@ -149,15 +149,16 @@ class mg_Pinterest_Strips extends WP_Widget {
 		// Board name validation
 		$board = $new_instance['board'];
 		if ($board != $old_instance['board']) {
-			if ($board == '')
-				$instance['board'] = $board;
+			if ($board == '') {
+				$instance['board'] = '';
+				$must_regenerate_cache = true;
+			}
 			else {
-				$board = strtolower($board);
-				$board = str_replace(' ', '-', $board);
-				if (!$this->is_valid_board($board, $username))
-					$errors[] = "Board '$board' not found";
+				$res = $this->board_validation($board, $username);
+				if ($res['status'] != 'ok')
+					$errors[] = "Something bad happened in board '$board' validation: {$res['status']}";
 				else {
-					$instance['board'] = $board;
+					$instance['board'] = $res['sanitized'];
 					$must_regenerate_cache = true;
 				}
 			}
@@ -434,16 +435,19 @@ class mg_Pinterest_Strips extends WP_Widget {
 		return 'ok';
 	}
 	
-	function is_valid_board($board_name, $username) {
+	function board_validation($board_name, $username) {
+		$board_name = strtolower($board_name);
+		$board_name = str_replace(' ', '-', $board_name);
+				
 		$rsp = wp_remote_get("http://pinterest.com/$username/$board_name.rss");
 
 		if (is_wp_error($rsp))
-			return false;
+			return array('status' => $rsp->get_error_message);
 		
 		if (wp_remote_retrieve_response_code($rsp) == 404)
-			return false;
+			return array('status' => "Board not found");
 		
-		return true;
+		return array('status' => 'ok', 'sanitized' => $board_name);
 	}
 	
 	function create_image_from_url($url) {
