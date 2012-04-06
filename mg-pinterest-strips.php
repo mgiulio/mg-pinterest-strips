@@ -130,82 +130,107 @@ class mg_Pinterest_Strips extends WP_Widget {
 		unset($old_instance['errors']);
 		$old_instance = wp_parse_args($old_instance, $this->instance_default);
 		$instance = $old_instance;
+		
+		$must_regenerate_cache = false;
 				
+		// Username validation
 		$username = $new_instance['username'];
-		if ($username	 == '') 
-			$errors[] = "The username is required";
-		else if (($res = $this->is_valid_pinterest_username($username)) != 'ok')
-			$errors[] = $res;
-		else
-			$instance['username'] = $username;
+		if ($username != $old_instance['username']) {
+			if ($username == '') 
+				$errors[] = "The username is required";
+			else if (($res = $this->is_valid_pinterest_username($username)) != 'ok')
+				$errors[] = $res;
+			else {
+				$instance['username'] = $username;
+				$must_regenerate_cache = true;
+			}
+		}
 			
+		// Board name validation
 		$board = $new_instance['board'];
-		if ($board == '')
-			$instance['board'] = $board;
-		else {
-			$board = strtolower($board);
-			$board = str_replace(' ', '-', $board);
-			if (!$this->is_valid_board($board, $username))
-				$errors[] = "Board '$board' not found";
-			else
+		if ($board != $old_instance['board']) {
+			if ($board == '')
 				$instance['board'] = $board;
+			else {
+				$board = strtolower($board);
+				$board = str_replace(' ', '-', $board);
+				if (!$this->is_valid_board($board, $username))
+					$errors[] = "Board '$board' not found";
+				else {
+					$instance['board'] = $board;
+					$must_regenerate_cache = true;
+				}
+			}
 		}
 		
+		// Max Items validation
 		$max_items = $new_instance['max_items'];
-		if ($max_items == '')
-			$errors[] = "The max number of items is required";
-		else if (($max_items = (int)$max_items) < 1)
-			$errors[] = "Max number of items must be greater than one";
-		else
-			$instance['max_items'] = $max_items;
+		if ($max_items != $old_instance['max_items']) {
+			if ($max_items == '')
+				$errors[] = "The max number of items is required";
+			else if (($max_items = (int)$max_items) < 1)
+				$errors[] = "Max number of items must be greater than one";
+			else {
+				$instance['max_items'] = $max_items;
+				$must_regenerate_cache = true;
+			}
+		}
 		
+		// Strip width validation
 		$strip_width = $new_instance['strip_width'];
-		if ($strip_width == '')
-			$errors[] = "The strip width field is required";
-		else {
-			$strip_width = (int)$strip_width;
-			if (!($strip_width >= 10))
-				$errors[] = "The strip width must be >= 10";
-			else if (!($strip_width <= 1024))
-				$errors[] = "The strip width must be <= 1024";
-			else
-				$instance['strip_width'] = $strip_width;
+		if ($strip_width != $old_instance['strip_width']) {
+			if ($strip_width == '')
+				$errors[] = "The strip width field is required";
+			else {
+				$strip_width = (int)$strip_width;
+				if (!($strip_width >= 10))
+					$errors[] = "The strip width must be >= 10";
+				else if (!($strip_width <= 1024))
+					$errors[] = "The strip width must be <= 1024";
+				else {
+					$instance['strip_width'] = $strip_width;
+					$must_regenerate_cache = true;
+				}
+			}
 		}
 		
+		// Num strips validation
 		$num_strips = $new_instance['num_strips'];
-		if ($num_strips == '')
-			$errors[] = "The number of strips field is required";
-		else {
-			$num_strips = (int)$num_strips;
-			if (!($num_strips >= 1))
-				$errors[] = "num_strips must be >= 1";
-			else if (!($num_strips <= 1024))
-				$errors[] = "num_strips must be <= 1024";
-			else
-				$instance['num_strips'] = $num_strips;
+		if ($num_strips != $old_instance['num_strips']) {
+			if ($num_strips == '')
+				$errors[] = "The number of strips field is required";
+			else {
+				$num_strips = (int)$num_strips;
+				if (!($num_strips >= 1))
+					$errors[] = "num_strips must be >= 1";
+				else if (!($num_strips <= 1024))
+					$errors[] = "num_strips must be <= 1024";
+				else {
+					$instance['num_strips'] = $num_strips;
+					$must_regenerate_cache = true;
+				}
+			}
 		}
 		
+		//Cachelife validation
 		$cache_life = $new_instance['cache_life'];
-		if ($cache_life == '')
-			$errors[] = "cache life is required";
-		else {
-			$cache_life = (int)$cache_life;
-			if (!($cache_life >= 60))
-				$errors[] = "cache life must be >= 60";
-			else if (!($cache_life <= 360000))
-				$errors[] = "cache life must be <= 3600000";
-			else
-				$instance['cache_life'] = $cache_life;
+		if ($cache_life != $old_instance['cache_life']) {
+			if ($cache_life == '')
+				$errors[] = "cache life is required";
+			else {
+				$cache_life = (int)$cache_life;
+				if (!($cache_life >= 60))
+					$errors[] = "cache life must be >= 60";
+				else if (!($cache_life <= 360000))
+					$errors[] = "cache life must be <= 3600000";
+				else {
+					$instance['cache_life'] = $cache_life;
+					$must_regenerate_cache = true;
+				}
+			}
 		}
 		
-		if (
-			$instance['username'] != $old_instance['username'] ||
-			$instance['board'] != $old_instance['board'] ||
-			$instance['max_items'] != $old_instance['max_items'] ||
-			$instance['strip_width'] != $old_instance['strip_width'] ||
-			$instance['num_strips'] != $old_instance['num_strips'] ||
-			$instance['cache_life'] != $old_instance['cache_life']
-		)
+		if ($must_regenerate_cache)
 			$this->regenerate_cache($instance);
 			
 		if (!empty($errors))
