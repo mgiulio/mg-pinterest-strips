@@ -10,15 +10,17 @@ Display Pinterests pins as vertical strips.
 
 == Description ==
 
-Display Pinterests pins as vertical strips(see screenshots section or a [http://mgiulio.altervista.org live demo]). 
+Display Pinterests pins as vertical strips. See screenshots section or a [live demo](http://mgiulio.altervista.org "live demo"). 
 
 From the widget settings form it is possible to:
+
 * Select which pins you'd like to display: all your pins or just the ones from a given board
 * Choose the width of a strip and how many of them
 * Set a limit on the pins you'd like to display
 * A refresh time interval(in seconds), afther which the pins are re-read from Pinterest
 
 Other requirements: 
+
 * PHP 5.2.4+
 * GD extension
 * SimpleXML extension
