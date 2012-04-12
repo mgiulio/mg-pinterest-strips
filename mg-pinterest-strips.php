@@ -1,13 +1,13 @@
 <?php
 
 /*
-Plugin Name: Pinterest Strips
+Plugin Name: mg Pinterest Strips
 Plugin URI: http://mgiulio.altervista.org
 Description: Display Pinterest pins as vertical strips
 Version: 0.1
 Author: mgiulio (Giulio Mainardi)
 Author URI: http://mgiulio.altervista.org
-License: GPL2
+License: GPLv2
 */
 
 class mg_Pinterest_Strips extends WP_Widget {
