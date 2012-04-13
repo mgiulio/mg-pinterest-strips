@@ -33,7 +33,7 @@ Other requirements:
 == Screenshots ==
 
 1. Using a single 100px width strips in the sidebar...
-2. ...and using another widget instance with four 100px width strips in the footer
+2. ...and using three more widget instances with more strips in the footer
 3. The widget settings form
 
 == Changelog ==
